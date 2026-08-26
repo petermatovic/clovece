@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="sk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#12131a" />
+    <meta name="description" content="Človeče, nehnevaj sa v 3D — pre 2 až 4 hráčov na jednom zariadení." />
+    <title>Človeče, nehnevaj sa — 3D</title>
+  </head>
+  <body>
+    <canvas id="scene"></canvas>
+
+    <!-- Herný HUD (viditeľný počas hry) -->
+    <div id="hud" class="hud hidden">
+      <div class="hud-top">
+        <div id="turn-badge" class="turn-badge">
+          <span class="turn-dot" id="turn-dot"></span>
+          <div class="turn-text">
+            <strong id="turn-name">Hráč 1</strong>
+            <small id="turn-hint">Hoď kockou</small>
+          </div>
+        </div>
+        <button id="btn-pause" class="icon-btn" type="button" aria-label="Menu hry">☰</button>
+      </div>
+
+      <div id="players-strip" class="players-strip"></div>
+
+      <div class="hud-bottom">
+        <div id="log" class="log" aria-live="polite"></div>
+        <button id="btn-roll" class="roll-btn" type="button">
+          <span class="roll-label">Hoď kockou</span>
+          <span id="roll-value" class="roll-value"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Hlavné menu -->
+    <section id="screen-menu" class="screen">
+      <div class="panel panel-menu">
+        <h1 class="title">Človeče,<br /><span>nehnevaj sa</span></h1>
+        <p class="subtitle">3D hra pre 2 až 4 hráčov na jednom zariadení</p>
+        <div class="menu-actions">
+          <button id="btn-new-game" class="btn btn-primary" type="button">Nová hra</button>
+          <button id="btn-continue" class="btn" type="button">Pokračovať v hre</button>
+          <button id="btn-settings" class="btn btn-ghost" type="button">Nastavenia</button>
+          <button id="btn-rules" class="btn btn-ghost" type="button">Ako sa hrá</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Nastavenie hráčov -->
+    <section id="screen-setup" class="screen hidden">
+      <div class="panel panel-wide">
+        <h2>Kto hrá?</h2>
+        <p class="hint">Vyber počet hráčov, farbu figúrok a farbu kocky. Každý slot môže hrať človek alebo počítač.</p>
+        <div class="count-row">
+          <span>Počet hráčov:</span>
+          <div id="player-count" class="segmented" role="group" aria-label="Počet hráčov"></div>
+        </div>
+        <div id="player-slots" class="player-slots"></div>
+        <div class="panel-actions">
+          <button id="btn-setup-back" class="btn btn-ghost" type="button">Späť</button>
+          <button id="btn-setup-next" class="btn btn-primary" type="button">Vybrať plochu →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Výber hracej plochy -->
+    <section id="screen-theme" class="screen hidden">
+      <div class="panel panel-wide">
+        <h2>Na akej ploche budete hrať?</h2>
+        <p class="hint">Plocha mení vzhľad dosky, svetlo aj pozadie. Pravidlá zostávajú rovnaké.</p>
+        <div id="theme-cards" class="theme-cards"></div>
+        <div class="panel-actions">
+          <button id="btn-theme-back" class="btn btn-ghost" type="button">Späť</button>
+          <button id="btn-start" class="btn btn-primary" type="button">Začať hru</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Koniec hry -->
+    <section id="screen-end" class="screen hidden">
+      <div class="panel">
+        <h2 id="end-title">Koniec hry</h2>
+        <ol id="podium" class="podium"></ol>
+        <div class="panel-actions">
+          <button id="btn-rematch" class="btn btn-primary" type="button">Odveta</button>
+          <button id="btn-to-menu" class="btn btn-ghost" type="button">Do menu</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pauza -->
+    <section id="screen-pause" class="screen hidden">
+      <div class="panel">
+        <h2>Pauza</h2>
+        <div class="menu-actions">
+          <button id="btn-resume" class="btn btn-primary" type="button">Pokračovať</button>
+          <button id="btn-pause-settings" class="btn" type="button">Nastavenia</button>
+          <button id="btn-pause-rules" class="btn btn-ghost" type="button">Ako sa hrá</button>
+          <button id="btn-quit" class="btn btn-ghost btn-danger" type="button">Ukončiť hru</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Nastavenia -->
+    <section id="screen-settings" class="screen hidden">
+      <div class="panel">
+        <h2>Nastavenia</h2>
+        <div class="settings-list">
+          <label class="setting">
+            <span>Zvuk</span>
+            <input id="set-sound" type="checkbox" />
+          </label>
+          <label class="setting">
+            <span>Hlasitosť</span>
+            <input id="set-volume" type="range" min="0" max="100" step="5" />
+          </label>
+          <label class="setting">
+            <span>Kvalita tieňov</span>
+            <select id="set-shadows">
+              <option value="high">Vysoká</option>
+              <option value="low">Nízka</option>
+              <option value="off">Vypnuté</option>
+            </select>
+          </label>
+          <label class="setting">
+            <span>Rýchlosť animácií</span>
+            <select id="set-speed">
+              <option value="0.7">Pomaly</option>
+              <option value="1">Normálne</option>
+              <option value="1.6">Rýchlo</option>
+              <option value="2.4">Veľmi rýchlo</option>
+            </select>
+          </label>
+          <label class="setting">
+            <span>Otáčať kameru k hráčovi</span>
+            <input id="set-rotate" type="checkbox" />
+          </label>
+          <label class="setting">
+            <span>Potvrdiť jediný možný ťah automaticky</span>
+            <input id="set-auto" type="checkbox" />
+          </label>
+        </div>
+        <div class="panel-actions">
+          <button id="btn-settings-close" class="btn btn-primary" type="button">Hotovo</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pravidlá -->
+    <section id="screen-rules" class="screen hidden">
+      <div class="panel panel-scroll">
+        <h2>Ako sa hrá</h2>
+        <ul class="rules">
+          <li>Každý hráč má <strong>4 figúrky</strong> v štartovom dvore. Cieľom je dostať všetky štyri do svojho domčeka.</li>
+          <li>Figúrka sa nasadí na dráhu <strong>len po hode šestky</strong>, a to na vlastné štartové pole.</li>
+          <li>Po <strong>šestke sa hádže znova</strong> — aj vtedy, keď sa ňou nedalo ťahať.</li>
+          <li>Kým nemáš žiadnu figúrku na dráhe, máš <strong>tri pokusy</strong> hodiť šestku.</li>
+          <li>Ak dopadneš na pole so <strong>súperovou figúrkou, vyhodíš ju</strong> späť do jeho dvora.</li>
+          <li>Na vlastnú figúrku sa stúpiť nedá — taký ťah je neplatný. Preskočiť ju po dráhe však smieš.</li>
+          <li>Do domčeka sa vchádza <strong>presným počtom</strong>; v domčeku sa vlastné figúrky nepreskakujú.</li>
+          <li>Vyhráva ten, kto má prvý <strong>všetky štyri figúrky v domčeku</strong>.</li>
+        </ul>
+        <div class="panel-actions">
+          <button id="btn-rules-close" class="btn btn-primary" type="button">Rozumiem</button>
+        </div>
+      </div>
+    </section>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
