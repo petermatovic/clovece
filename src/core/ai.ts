@@ -73,15 +73,30 @@ export function scoreMove(state: GameState, move: Move): number {
   return score;
 }
 
-/** Vyberie najlepší ťah zo zoznamu. Zoznam nesmie byť prázdny. */
+/**
+ * Vyberie ťah zo zoznamu. Zoznam nesmie byť prázdny.
+ *
+ * Vyhadzovanie je pre AI POVINNÉ: ak sa dá vyhodiť súper, vyberá sa už len
+ * spomedzi takých ťahov. Nie je to len otázka skóre — bez tvrdého pravidla by
+ * dobehnutie figúrky do domčeka (1000 bodov) prebilo vyhodenie (~700-950) a AI
+ * by šancu vyhodiť nechala prepadnúť, čo pôsobí ako chyba súpera. Príležitosť
+ * vyhodiť sa navyše po ťahu už nevráti, kým sa dobehnutie do domčeka spravidla dá odložiť.
+ *
+ * Skóre potom rozhoduje LEN o tom, ktorého súpera vyhodiť — uprednostní toho,
+ * ktorý došiel najďalej, teda ktorého to najviac zabolí.
+ */
 export function chooseMove(state: GameState, moves: Move[]): Move {
   if (moves.length === 0) throw new Error('AI dostala prázdny zoznam ťahov.');
-  let best = moves[0];
-  let bestScore = scoreMove(state, moves[0]);
-  for (let i = 1; i < moves.length; i++) {
-    const score = scoreMove(state, moves[i]);
+
+  const capturing = moves.filter((m) => m.capturesPieceIndex !== null);
+  const candidates = capturing.length > 0 ? capturing : moves;
+
+  let best = candidates[0];
+  let bestScore = scoreMove(state, candidates[0]);
+  for (let i = 1; i < candidates.length; i++) {
+    const score = scoreMove(state, candidates[i]);
     if (score > bestScore) {
-      best = moves[i];
+      best = candidates[i];
       bestScore = score;
     }
   }
