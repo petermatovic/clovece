@@ -5,6 +5,10 @@
 import './style.css';
 import { Controller } from './controller';
 import { assertLayoutConsistent } from './render/layout';
+import { inject } from '@vercel/analytics';
+
+// Inicializuje Vercel Web Analytics
+inject();
 
 // Chytí nesúlad medzi topológiou jadra a 3D layoutom hneď pri štarte,
 // nie až vtedy, keď figúrka skončí na nesprávnom poli.
